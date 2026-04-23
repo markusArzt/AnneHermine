@@ -731,8 +731,8 @@
       </div>
       <div class="settings-card">
         <div class="settings-title">AI Photo Recognition</div>
-        <p class="settings-note">Enter the IP address of the computer running Ollama. Must be on the same wifi network. The app connects via HTTPS on port 11435.</p>
-        <input class="settings-input" id="settings-ollama" placeholder="e.g. 192.168.0.244">
+        <p class="settings-note">Enter the full ngrok URL (e.g. https://abc123.ngrok-free.app) or a local IP address. Must be reachable from this device.</p>
+        <input class="settings-input" id="settings-ollama" placeholder="e.g. https://abc123.ngrok-free.app">
         <button class="settings-btn" onclick="saveOllamaUrl()">Save</button>
         <button class="settings-btn" style="margin-top:8px;background:var(--bg-secondary);color:var(--text)" onclick="testOllama()">Test connection</button>
       </div>
@@ -1511,12 +1511,12 @@ async function deleteTemplate(cat, color) {
 // CAMERA + OLLAMA AI
 // ═══════════════════════════════════════════════════
 function getOllamaUrl() {
-  const ip = LS.get('ah_ollama_ip');
-  if (!ip) return null;
-  // If already a full URL, use as-is
-  if (ip.startsWith('http')) return ip.replace(/\/$/, '');
-  // Otherwise use https on port 11435 (nginx SSL proxy)
-  return `https://${ip}:11435`;
+  const val = LS.get('ah_ollama_ip');
+  if (!val) return null;
+  // Full URL (e.g. ngrok) — use as-is
+  if (val.startsWith('http')) return val.replace(/\/$/, '');
+  // Plain IP — use https on port 11435 (nginx SSL proxy)
+  return `https://${val}:11435`;
 }
 
 function triggerCamera() {
