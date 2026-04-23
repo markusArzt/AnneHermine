@@ -735,6 +735,7 @@
         <input class="settings-input" id="settings-ollama" placeholder="e.g. https://abc123.ngrok-free.app">
         <button class="settings-btn" onclick="saveOllamaUrl()">Save</button>
         <button class="settings-btn" style="margin-top:8px;background:var(--bg-secondary);color:var(--text)" onclick="testOllama()">Test connection</button>
+        <div id="ollama-test-status" style="font-size:12px;color:var(--muted);margin-top:8px;word-break:break-all;line-height:1.5"></div>
       </div>
       <div class="settings-card">
         <div class="settings-title">Change Password</div>
@@ -1676,16 +1677,27 @@ function saveOllamaUrl() {
 
 async function testOllama() {
   const ollamaUrl = getOllamaUrl();
-  if (!ollamaUrl) { toast('Enter an IP address first'); return; }
+  if (!ollamaUrl) { toast('Enter a URL first'); return; }
+  const statusEl = document.getElementById('ollama-test-status');
+  if (statusEl) statusEl.textContent = 'Testing: ' + ollamaUrl;
   try {
     const r = await fetch(`${ollamaUrl}/api/tags`, {
       headers: { 'ngrok-skip-browser-warning': 'true' }
     });
+    if (!r.ok) {
+      const msg = 'HTTP ' + r.status;
+      if (statusEl) statusEl.textContent = 'Error: ' + msg;
+      toast('Error: ' + msg);
+      return;
+    }
     const j = await r.json();
     const models = (j.models || []).map(m => m.name).join(', ');
-    toast(`Connected ✓ Models: ${models}`);
+    if (statusEl) statusEl.textContent = '✓ Connected — ' + models;
+    toast('Connected ✓');
   } catch(e) {
-    toast('Could not connect — check IP and that Ollama is running');
+    const msg = e.message || 'Unknown error';
+    if (statusEl) statusEl.textContent = 'Failed: ' + msg;
+    toast('Failed: ' + msg);
   }
 }
 
