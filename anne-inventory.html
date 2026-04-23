@@ -1,0 +1,1534 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Anne Hermine — Inventory</title>
+
+<!-- PWA / Add to Home Screen -->
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="AH Inventory">
+<meta name="theme-color" content="#2c1a0e">
+<link rel="apple-touch-icon" href="icon.png">
+<link rel="manifest" href="manifest.json">
+
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --cream: #f7f3ee;
+    --warm-white: #fdfaf7;
+    --espresso: #2c1a0e;
+    --brown: #6b3f1f;
+    --caramel: #c4843a;
+    --sage: #7a9e7e;
+    --sage-light: #edf3ee;
+    --dust: #e8e0d8;
+    --muted: #9a8878;
+    --sold-bg: #f5ede8;
+    --sold-text: #b5522a;
+    --radius: 12px;
+    --radius-lg: 18px;
+  }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--cream);
+    color: var(--espresso);
+    min-height: 100vh;
+    font-size: 15px;
+  }
+
+  /* ── AUTH SCREEN ── */
+  #auth-screen {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem 1.5rem;
+    background: var(--espresso);
+  }
+  .auth-logo {
+    font-family: 'Playfair Display', serif;
+    font-size: 2rem;
+    color: var(--cream);
+    text-align: center;
+    margin-bottom: 0.25rem;
+    letter-spacing: 0.02em;
+  }
+  .auth-sub {
+    font-size: 12px;
+    color: var(--muted);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    margin-bottom: 3rem;
+    text-align: center;
+  }
+  .auth-card {
+    background: var(--warm-white);
+    border-radius: var(--radius-lg);
+    padding: 2rem 1.75rem;
+    width: 100%;
+    max-width: 360px;
+  }
+  .auth-label {
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 0.5rem;
+    display: block;
+  }
+  .auth-input {
+    width: 100%;
+    padding: 13px 14px;
+    border: 1.5px solid var(--dust);
+    border-radius: var(--radius);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 15px;
+    background: var(--cream);
+    color: var(--espresso);
+    margin-bottom: 0.75rem;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .auth-input:focus { border-color: var(--caramel); }
+  .auth-btn {
+    width: 100%;
+    padding: 14px;
+    background: var(--espresso);
+    color: var(--cream);
+    border: none;
+    border-radius: var(--radius);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 15px;
+    font-weight: 500;
+    cursor: pointer;
+    margin-top: 0.5rem;
+    transition: opacity 0.2s;
+  }
+  .auth-btn:active { opacity: 0.8; }
+  .auth-error {
+    font-size: 13px;
+    color: var(--sold-text);
+    text-align: center;
+    margin-top: 0.75rem;
+    min-height: 20px;
+  }
+
+  /* ── MAIN APP ── */
+  #app { display: none; }
+
+  .header {
+    background: var(--espresso);
+    padding: 1rem 1.25rem 0.875rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 50;
+  }
+  .header-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.25rem;
+    color: var(--cream);
+    letter-spacing: 0.01em;
+  }
+  .header-actions { display: flex; gap: 10px; align-items: center; }
+  .icon-btn {
+    width: 36px; height: 36px;
+    background: rgba(255,255,255,0.1);
+    border: none; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; color: var(--cream); font-size: 16px;
+    transition: background 0.15s;
+  }
+  .icon-btn:active { background: rgba(255,255,255,0.2); }
+
+  /* ── TABS ── */
+  .tabs {
+    display: flex;
+    background: var(--espresso);
+    padding: 0 1.25rem 1rem;
+    gap: 6px;
+  }
+  .tab {
+    padding: 7px 16px;
+    border-radius: 20px;
+    border: 1px solid rgba(255,255,255,0.2);
+    background: transparent;
+    color: rgba(255,255,255,0.55);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .tab.active {
+    background: var(--caramel);
+    border-color: var(--caramel);
+    color: #fff;
+    font-weight: 500;
+  }
+
+  /* ── CONTENT ── */
+  .content { padding: 1.25rem; max-width: 600px; margin: 0 auto; }
+
+  /* ── STATS BAR ── */
+  .stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    margin-bottom: 1.25rem;
+  }
+  .stat {
+    background: var(--warm-white);
+    border-radius: var(--radius);
+    padding: 0.875rem 1rem;
+    text-align: center;
+  }
+  .stat-num {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.6rem;
+    color: var(--espresso);
+    line-height: 1;
+  }
+  .stat-label {
+    font-size: 10px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-top: 3px;
+  }
+
+  /* ── SEARCH / FILTER ── */
+  .search-row {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 1rem;
+  }
+  .search-input {
+    flex: 1;
+    padding: 10px 14px;
+    border: 1.5px solid var(--dust);
+    border-radius: var(--radius);
+    background: var(--warm-white);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    color: var(--espresso);
+    outline: none;
+  }
+  .search-input:focus { border-color: var(--caramel); }
+  .filter-btn {
+    padding: 10px 14px;
+    border: 1.5px solid var(--dust);
+    border-radius: var(--radius);
+    background: var(--warm-white);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    color: var(--muted);
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  .filter-btn.active { border-color: var(--caramel); color: var(--caramel); background: #fdf5ec; }
+
+  /* ── BAG CARDS ── */
+  .bag-list { display: flex; flex-direction: column; gap: 10px; }
+
+  .bag-card {
+    background: var(--warm-white);
+    border-radius: var(--radius-lg);
+    padding: 1rem 1.25rem;
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+    position: relative;
+    transition: transform 0.15s;
+    border: 1.5px solid transparent;
+  }
+  .bag-card.sold {
+    opacity: 0.6;
+    border-color: var(--dust);
+  }
+  .bag-card:active { transform: scale(0.99); }
+
+  .bag-color-swatch {
+    width: 44px;
+    height: 44px;
+    border-radius: 10px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    background: var(--dust);
+  }
+
+  .bag-info { flex: 1; min-width: 0; }
+  .bag-name {
+    font-weight: 500;
+    font-size: 15px;
+    color: var(--espresso);
+    margin-bottom: 2px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .bag-meta {
+    font-size: 12px;
+    color: var(--muted);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 6px;
+  }
+  .bag-tag {
+    background: var(--dust);
+    border-radius: 6px;
+    padding: 2px 7px;
+    font-size: 11px;
+    color: var(--brown);
+  }
+  .bag-price {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.05rem;
+    color: var(--caramel);
+  }
+
+  .bag-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    flex-shrink: 0;
+  }
+  .action-btn {
+    padding: 6px 12px;
+    border-radius: 8px;
+    border: none;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: opacity 0.15s;
+    text-align: center;
+    min-width: 70px;
+  }
+  .action-btn:active { opacity: 0.7; }
+  .btn-sold {
+    background: var(--sold-bg);
+    color: var(--sold-text);
+  }
+  .btn-available {
+    background: var(--sage-light);
+    color: var(--sage);
+  }
+  .btn-delete {
+    background: var(--dust);
+    color: var(--muted);
+  }
+
+  .sold-badge {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: var(--sold-bg);
+    color: var(--sold-text);
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 3px 8px;
+    border-radius: 6px;
+  }
+
+  /* ── EMPTY STATE ── */
+  .empty {
+    text-align: center;
+    padding: 3rem 1rem;
+    color: var(--muted);
+  }
+  .empty-icon { font-size: 2.5rem; margin-bottom: 0.75rem; }
+  .empty-text { font-size: 14px; line-height: 1.6; }
+
+  /* ── FAB ── */
+  .fab {
+    position: fixed;
+    bottom: 1.5rem;
+    right: 1.5rem;
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: var(--caramel);
+    border: none;
+    color: white;
+    font-size: 26px;
+    cursor: pointer;
+    box-shadow: 0 4px 16px rgba(196,132,58,0.4);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 40;
+    transition: transform 0.15s, box-shadow 0.15s;
+  }
+  .fab:active { transform: scale(0.93); box-shadow: 0 2px 8px rgba(196,132,58,0.3); }
+
+  /* ── DRAWER (Add bag form) ── */
+  .drawer-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(44,26,14,0.5);
+    z-index: 60;
+    display: none;
+    animation: fadeIn 0.2s ease;
+  }
+  .drawer-backdrop.open { display: block; }
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+  .drawer {
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    background: var(--warm-white);
+    border-radius: 20px 20px 0 0;
+    z-index: 70;
+    max-height: 92vh;
+    overflow-y: auto;
+    padding: 0 1.25rem 2.5rem;
+    transform: translateY(100%);
+    transition: transform 0.3s cubic-bezier(0.32, 0.72, 0, 1);
+    max-width: 600px;
+    margin: 0 auto;
+  }
+  .drawer.open { transform: translateY(0); }
+
+  .drawer-handle {
+    width: 36px; height: 4px;
+    background: var(--dust);
+    border-radius: 2px;
+    margin: 1rem auto 1.25rem;
+  }
+  .drawer-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.25rem;
+    margin-bottom: 1.5rem;
+    color: var(--espresso);
+  }
+
+  .form-group { margin-bottom: 1rem; }
+  .form-label {
+    display: block;
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 6px;
+  }
+  .form-input, .form-select, .form-textarea {
+    width: 100%;
+    padding: 12px 14px;
+    border: 1.5px solid var(--dust);
+    border-radius: var(--radius);
+    background: var(--cream);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 15px;
+    color: var(--espresso);
+    outline: none;
+    transition: border-color 0.2s;
+    appearance: none;
+  }
+  .form-input:focus, .form-select:focus, .form-textarea:focus {
+    border-color: var(--caramel);
+  }
+  .form-textarea { resize: vertical; min-height: 80px; }
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+  .submit-btn {
+    width: 100%;
+    padding: 15px;
+    background: var(--espresso);
+    color: var(--cream);
+    border: none;
+    border-radius: var(--radius);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 15px;
+    font-weight: 500;
+    cursor: pointer;
+    margin-top: 0.75rem;
+    transition: opacity 0.2s;
+    letter-spacing: 0.02em;
+  }
+  .submit-btn:active { opacity: 0.8; }
+  .submit-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+
+  /* ── SETTINGS VIEW ── */
+  .settings-card {
+    background: var(--warm-white);
+    border-radius: var(--radius-lg);
+    padding: 1.25rem;
+    margin-bottom: 1rem;
+  }
+  .settings-title {
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 1rem;
+  }
+  .settings-input {
+    width: 100%;
+    padding: 11px 13px;
+    border: 1.5px solid var(--dust);
+    border-radius: var(--radius);
+    background: var(--cream);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    color: var(--espresso);
+    outline: none;
+    margin-bottom: 8px;
+  }
+  .settings-input:focus { border-color: var(--caramel); }
+  .settings-btn {
+    width: 100%;
+    padding: 12px;
+    border-radius: var(--radius);
+    border: none;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    background: var(--espresso);
+    color: var(--cream);
+    margin-top: 4px;
+    transition: opacity 0.2s;
+  }
+  .settings-btn:active { opacity: 0.8; }
+  .settings-btn.danger { background: var(--sold-bg); color: var(--sold-text); }
+  .settings-note {
+    font-size: 12px;
+    color: var(--muted);
+    line-height: 1.6;
+    margin-bottom: 0.75rem;
+  }
+
+  /* ── TOAST ── */
+  .toast {
+    position: fixed;
+    bottom: 5rem;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--espresso);
+    color: var(--cream);
+    padding: 10px 20px;
+    border-radius: 20px;
+    font-size: 13px;
+    opacity: 0;
+    transition: opacity 0.2s;
+    pointer-events: none;
+    white-space: nowrap;
+    z-index: 200;
+  }
+  .toast.show { opacity: 1; }
+
+  /* ── SPINNER ── */
+  .spinner {
+    display: inline-block;
+    width: 14px; height: 14px;
+    border: 2px solid rgba(255,255,255,0.3);
+    border-top-color: #fff;
+    border-radius: 50%;
+    animation: spin 0.6s linear infinite;
+    vertical-align: middle;
+    margin-right: 6px;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ── TEMPLATE PICKER ── */
+  .template-section { margin-bottom: 1rem; }
+  .template-label-row {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 6px;
+  }
+  .template-chips {
+    display: flex; flex-wrap: wrap; gap: 6px;
+    margin-bottom: 0.5rem;
+  }
+  .template-chip {
+    padding: 5px 12px;
+    border-radius: 20px;
+    border: 1.5px solid var(--dust);
+    background: var(--cream);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 12px;
+    color: var(--brown);
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .template-chip:hover { border-color: var(--caramel); color: var(--caramel); }
+  .template-chip.active { background: var(--caramel); border-color: var(--caramel); color: #fff; }
+  .template-chip.add-chip {
+    border-style: dashed;
+    color: var(--muted);
+  }
+  .save-template-btn {
+    font-size: 11px;
+    color: var(--caramel);
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-family: 'DM Sans', sans-serif;
+    padding: 0;
+    text-decoration: underline;
+  }
+  .divider {
+    height: 1px;
+    background: var(--dust);
+    margin: 1rem 0;
+  }
+  /* card tap area */
+  .bag-card-body { cursor: pointer; flex: 1; min-width: 0; display: flex; align-items: flex-start; gap: 1rem; }
+
+  /* template manager */
+  .tmpl-cat-section { margin-bottom: 1.5rem; }
+  .tmpl-cat-header {
+    font-size: 11px; font-weight: 500; letter-spacing: 0.09em;
+    text-transform: uppercase; color: var(--muted);
+    margin-bottom: 0.5rem;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .tmpl-item {
+    background: var(--cream);
+    border: 0.5px solid var(--dust);
+    border-radius: var(--radius);
+    padding: 0.75rem 1rem;
+    margin-bottom: 6px;
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+  }
+  .tmpl-item-info { flex: 1; min-width: 0; }
+  .tmpl-item-name { font-weight: 500; font-size: 14px; margin-bottom: 2px; }
+  .tmpl-item-meta { font-size: 12px; color: var(--muted); }
+  .tmpl-item-actions { display: flex; gap: 6px; flex-shrink: 0; }
+  .tmpl-action {
+    padding: 4px 10px; border-radius: 6px; border: 0.5px solid var(--dust);
+    background: transparent; font-size: 11px; color: var(--muted);
+    cursor: pointer; font-family: 'DM Sans', sans-serif;
+  }
+  .tmpl-action.danger { color: var(--sold-text); border-color: var(--sold-bg); }
+  .tmpl-action:hover { background: var(--dust); }
+  .tmpl-empty { font-size: 13px; color: var(--muted); font-style: italic; padding: 0.25rem 0; }
+  .tabs-secondary {
+    display: flex; gap: 6px; margin-bottom: 1.25rem; flex-wrap: wrap;
+  }
+  .tab-secondary {
+    padding: 6px 14px; border-radius: 20px;
+    border: 0.5px solid var(--dust); background: transparent;
+    font-family: 'DM Sans', sans-serif; font-size: 12px; color: var(--muted); cursor: pointer;
+  }
+  .tab-secondary.active { background: var(--espresso); color: var(--cream); border-color: var(--espresso); }
+</style>
+</head>
+<body>
+
+<!-- AUTH -->
+<div id="auth-screen">
+  <div class="auth-logo">Anne Hermine</div>
+  <div class="auth-sub">Inventory Management</div>
+  <div class="auth-card">
+    <label class="auth-label">Password</label>
+    <input class="auth-input" type="password" id="auth-password" placeholder="Enter password" autocomplete="current-password">
+    <label class="auth-label" style="margin-top:0.5rem">Web App URL</label>
+    <input class="auth-input" type="url" id="auth-url" placeholder="https://script.google.com/macros/s/…/exec">
+    <button class="auth-btn" id="auth-btn" onclick="doLogin()">Enter</button>
+    <div class="auth-error" id="auth-error"></div>
+  </div>
+</div>
+
+<!-- MAIN APP -->
+<div id="app">
+  <div class="header">
+    <div class="header-title">Inventory</div>
+    <div class="header-actions">
+      <button class="icon-btn" onclick="refreshData()" title="Refresh" id="refresh-btn">↻</button>
+      <button class="icon-btn" onclick="switchTab('settings')" title="Settings">⚙</button>
+    </div>
+  </div>
+
+  <div class="tabs">
+    <button class="tab active" id="tab-all" onclick="setTabFilter('all')">All</button>
+    <button class="tab" id="tab-available" onclick="setTabFilter('available')">Available</button>
+    <button class="tab" id="tab-sold" onclick="setTabFilter('sold')">Sold</button>
+    <button class="tab" id="tab-templates" onclick="switchTab('templates')">Templates</button>
+  </div>
+
+  <!-- INVENTORY VIEW -->
+  <div id="view-inventory">
+    <div class="content">
+      <div class="stats" id="stats-bar"></div>
+      <div class="search-row">
+        <input class="search-input" id="search-input" placeholder="Search bags…" oninput="renderList()">
+        <select class="filter-btn" id="cat-filter" onchange="renderList()" style="padding:10px 10px;font-size:13px;">
+          <option value="">All types</option>
+          <option>Backpack</option>
+          <option>Laptop Case</option>
+          <option>Cosmetic Bag</option>
+          <option>Wallet</option>
+          <option>Fanny Pack</option>
+          <option>Tote Bag</option>
+          <option>Gym Bag</option>
+          <option>Glasses Case</option>
+          <option>Other</option>
+        </select>
+      </div>
+      <div class="bag-list" id="bag-list"></div>
+    </div>
+  </div>
+
+  <!-- SETTINGS VIEW -->
+  <div id="view-settings" style="display:none">
+    <div class="content">
+      <div class="settings-card">
+        <div class="settings-title">Connection</div>
+        <p class="settings-note">Update the Google Apps Script URL if needed.</p>
+        <input class="settings-input" id="settings-url" placeholder="Web app URL">
+        <button class="settings-btn" onclick="saveUrl()">Save URL</button>
+      </div>
+      <div class="settings-card">
+        <div class="settings-title">Change Password</div>
+        <p class="settings-note">Password is stored locally on this device only.</p>
+        <input class="settings-input" type="password" id="new-password" placeholder="New password">
+        <button class="settings-btn" onclick="changePassword()">Update Password</button>
+      </div>
+      <div class="settings-card">
+        <div class="settings-title">Data</div>
+        <p class="settings-note">Export current inventory as CSV, or clear all data from the sheet.</p>
+        <button class="settings-btn" onclick="exportCSV()">Export CSV</button>
+        <button class="settings-btn danger" style="margin-top:8px" onclick="clearAll()">Clear All Data</button>
+      </div>
+      <div class="settings-card">
+        <div class="settings-title">Session</div>
+        <button class="settings-btn danger" onclick="logout()">Log Out</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- TEMPLATES VIEW -->
+  <div id="view-templates" style="display:none">
+    <div class="content">
+      <p style="font-size:13px;color:var(--muted);margin-bottom:1.25rem;line-height:1.6">
+        Templates auto-fill price, materials and dimensions when adding a bag.
+        Organised by category and color.
+      </p>
+      <div id="template-manager-content"></div>
+    </div>
+  </div>
+</div>
+
+<!-- FAB -->
+<button class="fab" id="fab" onclick="openDrawer()">+</button>
+
+<!-- ADD BAG DRAWER -->
+<div class="drawer-backdrop" id="drawer-backdrop" onclick="closeDrawer()"></div>
+<div class="drawer" id="drawer">
+  <div class="drawer-handle"></div>
+  <div class="drawer-title" id="drawer-title">Add New Bag</div>
+
+  <!-- TEMPLATE PICKER (only shown when adding) -->
+  <div id="template-section" class="template-section">
+    <div class="form-group">
+      <label class="form-label">Category</label>
+      <select class="form-select" id="f-category" onchange="onCategoryChange()">
+        <option value="">Select…</option>
+        <option>Backpack</option>
+        <option>Laptop Case</option>
+        <option>Cosmetic Bag</option>
+        <option>Wallet</option>
+        <option>Fanny Pack</option>
+        <option>Tote Bag</option>
+        <option>Gym Bag</option>
+        <option>Glasses Case</option>
+        <option>Other</option>
+      </select>
+    </div>
+    <div id="color-template-row" style="display:none">
+      <div class="template-label-row">
+        <label class="form-label" style="margin:0">Color template</label>
+        <button class="save-template-btn" onclick="saveCurrentAsTemplate()">Save current as template</button>
+      </div>
+      <div class="template-chips" id="template-chips"></div>
+    </div>
+    <div class="divider"></div>
+  </div>
+
+  <div class="form-group">
+    <label class="form-label">Name / Title</label>
+    <input class="form-input" id="f-name" placeholder="e.g. Mint Green Fanny Pack">
+  </div>
+  <div class="form-row">
+    <div class="form-group" id="category-field-edit" style="display:none">
+      <label class="form-label">Category</label>
+      <select class="form-select" id="f-category-edit">
+        <option value="">Select…</option>
+        <option>Backpack</option>
+        <option>Laptop Case</option>
+        <option>Cosmetic Bag</option>
+        <option>Wallet</option>
+        <option>Fanny Pack</option>
+        <option>Tote Bag</option>
+        <option>Gym Bag</option>
+        <option>Glasses Case</option>
+        <option>Other</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Price (€)</label>
+      <input class="form-input" id="f-price" type="number" placeholder="0.00" step="0.01" min="0">
+    </div>
+  </div>
+  <div class="form-group">
+    <label class="form-label">Materials / Colors</label>
+    <input class="form-input" id="f-materials" placeholder="e.g. Coffee bag, mint green, magenta zipper">
+  </div>
+  <div class="form-row">
+    <div class="form-group">
+      <label class="form-label">Width (cm)</label>
+      <input class="form-input" id="f-width" type="number" placeholder="26">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Height (cm)</label>
+      <input class="form-input" id="f-height" type="number" placeholder="16">
+    </div>
+  </div>
+  <div class="form-group">
+    <label class="form-label">Depth (cm) <span style="font-size:10px;color:var(--muted)">(optional)</span></label>
+    <input class="form-input" id="f-depth" type="number" placeholder="8">
+  </div>
+  <div class="form-group">
+    <label class="form-label">Notes <span style="font-size:10px;color:var(--muted)">(optional)</span></label>
+    <textarea class="form-textarea" id="f-notes" placeholder="Any extra details…"></textarea>
+  </div>
+  <div class="form-group">
+    <label class="form-label">Description <span style="font-size:10px;color:var(--muted)">(for Etsy / website — not shown in overview)</span></label>
+    <textarea class="form-textarea" id="f-description" placeholder="Full product description for your shop listing…" style="min-height:100px"></textarea>
+  </div>
+  <div id="save-as-template-row" style="display:none;margin-bottom:0.75rem">
+    <button class="save-template-btn" onclick="saveEditedBagAsTemplate()" style="font-size:13px">
+      💾 Save this bag's details as a template
+    </button>
+  </div>
+  <button class="submit-btn" id="submit-btn" onclick="submitBag()">Add to Inventory</button>
+</div>
+
+<!-- TEMPLATE EDIT DRAWER -->
+<div class="drawer" id="te-drawer" data-cat="" data-idx="">
+  <div class="drawer-handle"></div>
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem">
+    <div>
+      <div class="drawer-title" style="margin-bottom:2px">Edit Template</div>
+      <div style="font-size:12px;color:var(--muted)">Category: <span id="te-cat"></span></div>
+    </div>
+  </div>
+  <div class="form-group">
+    <label class="form-label">Color name</label>
+    <input class="form-input" id="te-color" placeholder="e.g. Mint Green">
+  </div>
+  <div class="form-row">
+    <div class="form-group">
+      <label class="form-label">Price (€)</label>
+      <input class="form-input" id="te-price" type="number" placeholder="0.00" step="0.01" min="0">
+    </div>
+    <div class="form-group">
+      <label class="form-label">&nbsp;</label>
+    </div>
+  </div>
+  <div class="form-group">
+    <label class="form-label">Materials / Colors</label>
+    <input class="form-input" id="te-materials" placeholder="e.g. Coffee bag, mint green, magenta zipper">
+  </div>
+  <div class="form-row">
+    <div class="form-group">
+      <label class="form-label">Width (cm)</label>
+      <input class="form-input" id="te-width" type="number" placeholder="26">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Height (cm)</label>
+      <input class="form-input" id="te-height" type="number" placeholder="16">
+    </div>
+  </div>
+  <div class="form-group">
+    <label class="form-label">Depth (cm) <span style="font-size:10px;color:var(--muted)">(optional)</span></label>
+    <input class="form-input" id="te-depth" type="number" placeholder="8">
+  </div>
+  <div class="form-group">
+    <label class="form-label">Notes <span style="font-size:10px;color:var(--muted)">(optional)</span></label>
+    <textarea class="form-textarea" id="te-notes" placeholder="Any extra details…"></textarea>
+  </div>
+  <div class="form-group">
+    <label class="form-label">Description <span style="font-size:10px;color:var(--muted)">(for Etsy / website)</span></label>
+    <textarea class="form-textarea" id="te-description" placeholder="Full product description…" style="min-height:100px"></textarea>
+  </div>
+  <button class="submit-btn" onclick="saveTemplateEdit()">Save Template</button>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ═══════════════════════════════════════════════════
+// STORAGE
+// ═══════════════════════════════════════════════════
+const LS = {
+  get: k => { try { return JSON.parse(localStorage.getItem(k)); } catch(e) { return null; } },
+  set: (k,v) => localStorage.setItem(k, JSON.stringify(v)),
+  del: k => localStorage.removeItem(k)
+};
+
+// ═══════════════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════════════
+let session = null;   // { url, passwordHash }
+let bags = [];        // local cache
+let tabFilter = 'all';
+let editingId = null;
+
+// ═══════════════════════════════════════════════════
+// AUTH
+// ═══════════════════════════════════════════════════
+async function hashPassword(pw) {
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(pw));
+  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,'0')).join('');
+}
+
+async function doLogin() {
+  const pw  = document.getElementById('auth-password').value;
+  const url = document.getElementById('auth-url').value.trim();
+  const err = document.getElementById('auth-error');
+  const btn = document.getElementById('auth-btn');
+
+  if (!pw || !url) { err.textContent = 'Please enter both fields.'; return; }
+  if (pw.length < 4) { err.textContent = 'Password must be at least 4 characters.'; return; }
+
+  btn.disabled = true; btn.innerHTML = '<span class="spinner"></span>Connecting…';
+  err.textContent = '';
+
+  // Store URL in session temporarily so apiFetch can use it
+  const hash = await hashPassword(pw);
+  session = { url, hash };
+
+  // Show exactly what we're sending so we can debug
+  console.log('Password entered:', pw);
+  console.log('Hash being sent: ', hash);
+  console.log('Expected hash:   ', 'eed8ac7a67262ce42ace199b36584abd843900435571c6c89125818d4b5654e3');
+  console.log('URL being used:  ', url);
+
+  try {
+    await apiFetch({ action: 'read', secret: hash });
+    LS.set('ah_session', session);
+    showApp();
+  } catch(e) {
+    console.log('Error:', e.message);
+    session = null;
+    err.textContent = e.message.includes('403') ? 'Wrong password — hash mismatch.' : 'Could not connect — check the URL. Error: ' + e.message;
+  }
+  btn.disabled = false; btn.textContent = 'Enter';
+}
+
+async function logout() {
+  LS.del('ah_session');
+  session = null;
+  bags = [];
+  location.reload();
+}
+
+// ═══════════════════════════════════════════════════
+// API  (JSONP to avoid CORS/redirect issues)
+// ═══════════════════════════════════════════════════
+async function apiFetch(params) {
+  const qs = Object.entries(params).map(([k,v]) => k + '=' + encodeURIComponent(v)).join('&');
+  const url = session.url + '?' + qs;
+  const r = await fetch(url, {
+    redirect: 'follow',
+    mode: 'cors'
+  });
+  if (!r.ok) throw new Error('HTTP ' + r.status);
+  const j = await r.json();
+  if (!j.ok) throw new Error(j.error || 'Error');
+  return j;
+}
+
+// ═══════════════════════════════════════════════════
+// APP INIT
+// ═══════════════════════════════════════════════════
+function showApp() {
+  document.getElementById('auth-screen').style.display = 'none';
+  document.getElementById('app').style.display = 'block';
+  document.getElementById('fab').style.display = 'flex';
+  document.getElementById('settings-url').value = session.url;
+  loadData();
+}
+
+async function loadData() {
+  // Load templates and bags in parallel
+  loadTemplates();
+  try {
+    const data = await apiFetch({ action: 'read', secret: session.hash });
+    bags = data.bags || [];
+    LS.set('ah_cache', bags);
+    renderAll();
+  } catch(e) {
+    // Show cached data if available
+    const cached = LS.get('ah_cache');
+    if (cached) { bags = cached; renderAll(); }
+    toast('Could not reach server — showing cached data');
+  }
+}
+
+async function refreshData() {
+  const btn = document.getElementById('refresh-btn');
+  btn.style.animation = 'spin 0.6s linear infinite';
+  await loadData();
+  btn.style.animation = '';
+}
+
+// ═══════════════════════════════════════════════════
+// RENDER
+// ═══════════════════════════════════════════════════
+const CATEGORY_EMOJI = {
+  'Backpack': '🎒', 'Laptop Case': '💻', 'Cosmetic Bag': '💄',
+  'Wallet': '👛', 'Fanny Pack': '🏃', 'Tote Bag': '🛍️',
+  'Gym Bag': '🏋️', 'Glasses Case': '🕶️', 'Other': '👜'
+};
+
+function renderAll() {
+  renderStats();
+  renderList();
+}
+
+function renderStats() {
+  const total     = bags.length;
+  const available = bags.filter(b => !b.sold).length;
+  const sold      = bags.filter(b => b.sold).length;
+  document.getElementById('stats-bar').innerHTML = `
+    <div class="stat"><div class="stat-num">${total}</div><div class="stat-label">Total</div></div>
+    <div class="stat"><div class="stat-num" style="color:var(--sage)">${available}</div><div class="stat-label">Available</div></div>
+    <div class="stat"><div class="stat-num" style="color:var(--sold-text)">${sold}</div><div class="stat-label">Sold</div></div>`;
+}
+
+function renderList() {
+  const q   = (document.getElementById('search-input')?.value || '').toLowerCase();
+  const cat = document.getElementById('cat-filter')?.value || '';
+  const list = document.getElementById('bag-list');
+
+  let filtered = bags.filter(b => {
+    if (tabFilter === 'available' && b.sold) return false;
+    if (tabFilter === 'sold' && !b.sold) return false;
+    if (cat && b.category !== cat) return false;
+    if (q && !`${b.name} ${b.category} ${b.materials}`.toLowerCase().includes(q)) return false;
+    return true;
+  });
+
+  if (!filtered.length) {
+    list.innerHTML = `<div class="empty">
+      <div class="empty-icon">🛍️</div>
+      <div class="empty-text">${bags.length ? 'No bags match your filter.' : 'No bags yet.<br>Tap + to add your first bag.'}</div>
+    </div>`;
+    return;
+  }
+
+  list.innerHTML = filtered.map(b => {
+    const emoji = CATEGORY_EMOJI[b.category] || '👜';
+    const size  = b.width && b.height
+      ? `${b.width}×${b.height}${b.depth ? '×' + b.depth : ''} cm`
+      : '';
+    const tags  = [b.category, size].filter(Boolean);
+    return `
+    <div class="bag-card ${b.sold ? 'sold' : ''}" id="card-${b.id}">
+      ${b.sold ? '<div class="sold-badge">Sold</div>' : ''}
+      <div class="bag-card-body" onclick="openEditDrawer('${b.id}')">
+        <div class="bag-color-swatch">${emoji}</div>
+        <div class="bag-info">
+          <div class="bag-name">${b.name}</div>
+          <div class="bag-meta">
+            ${tags.map(t => `<span class="bag-tag">${t}</span>`).join('')}
+          </div>
+          ${b.materials ? `<div style="font-size:12px;color:var(--muted);margin-bottom:4px">${b.materials}</div>` : ''}
+          <div class="bag-price">€${parseFloat(b.price || 0).toFixed(2)}</div>
+        </div>
+      </div>
+      <div class="bag-actions">
+        ${b.sold
+          ? `<button class="action-btn btn-available" onclick="toggleSold('${b.id}', false)">Available</button>`
+          : `<button class="action-btn btn-sold" onclick="toggleSold('${b.id}', true)">Mark Sold</button>`
+        }
+        <button class="action-btn btn-delete" onclick="deleteBag('${b.id}')">Delete</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function setTabFilter(f) {
+  tabFilter = f;
+  switchTab('inventory');
+  ['all','available','sold'].forEach(t => {
+    document.getElementById('tab-' + t)?.classList.toggle('active', t === f);
+  });
+  renderList();
+}
+
+function switchTab(name) {
+  const views = { inventory: 'view-inventory', settings: 'view-settings', templates: 'view-templates' };
+  Object.values(views).forEach(v => { const el = document.getElementById(v); if(el) el.style.display = 'none'; });
+  const target = views[name] || 'view-inventory';
+  document.getElementById(target).style.display = 'block';
+  document.getElementById('fab').style.display = (name === 'inventory') ? 'flex' : 'none';
+  ['all','available','sold','templates'].forEach(t => document.getElementById('tab-' + t)?.classList.remove('active'));
+  if (name === 'settings') {
+    document.getElementById('settings-url').value = session?.url || '';
+  }
+  if (name === 'templates') {
+    document.getElementById('tab-templates')?.classList.add('active');
+    renderTemplateManager();
+  }
+}
+
+// ═══════════════════════════════════════════════════
+// ACTIONS
+// ═══════════════════════════════════════════════════
+async function toggleSold(id, sold) {
+  const bag = bags.find(b => b.id === id);
+  if (!bag) return;
+  bag.sold = sold;
+  bag.soldAt = sold ? new Date().toISOString() : null;
+  renderAll();
+  try {
+    await apiFetch({ action: 'update', secret: session.hash, id, sold: sold ? '1' : '0', soldAt: bag.soldAt || '' });
+    toast(sold ? 'Marked as sold ✓' : 'Marked as available ✓');
+  } catch(e) {
+    bag.sold = !sold; // revert
+    renderAll();
+    toast('Could not update — try again');
+  }
+}
+
+async function deleteBag(id) {
+  if (!confirm('Delete this bag? This cannot be undone.')) return;
+  const prev = [...bags];
+  bags = bags.filter(b => b.id !== id);
+  renderAll();
+  try {
+    await apiFetch({ action: 'delete', secret: session.hash, id });
+    toast('Bag deleted');
+  } catch(e) {
+    bags = prev; renderAll();
+    toast('Could not delete — try again');
+  }
+}
+
+// ═══════════════════════════════════════════════════
+// TEMPLATES  (synced to Google Sheet)
+// Cache: localStorage for instant UI, Sheet as source of truth
+// ═══════════════════════════════════════════════════
+function getTemplates() { return LS.get('ah_templates') || {}; }
+function setTemplatesCache(t) { LS.set('ah_templates', t); }
+
+async function loadTemplates() {
+  try {
+    const data = await apiFetch({ action: 'readTemplates', secret: session.hash });
+    setTemplatesCache(data.templates || {});
+  } catch(e) { /* use local cache */ }
+}
+
+function onCategoryChange() {
+  const cat = document.getElementById('f-category').value;
+  renderTemplateChips(cat);
+  document.getElementById('color-template-row').style.display = cat ? 'block' : 'none';
+}
+
+function renderTemplateChips(cat) {
+  const chips = document.getElementById('template-chips');
+  if (!chips) return;
+  const catTemplates = (getTemplates()[cat] || []);
+  if (!catTemplates.length) {
+    chips.innerHTML = `<span style="font-size:12px;color:var(--muted)">No templates yet — fill in fields and tap "Save as template".</span>`;
+    return;
+  }
+  chips.innerHTML = catTemplates.map((t, i) =>
+    `<button class="template-chip" onclick="applyTemplate(${i})">${t.color || 'Template ' + (i+1)}</button>`
+  ).join('');
+}
+
+function applyTemplate(idx) {
+  const cat = document.getElementById('f-category').value;
+  const t = (getTemplates()[cat] || [])[idx];
+  if (!t) return;
+  document.getElementById('f-price').value       = t.price || '';
+  document.getElementById('f-materials').value   = t.materials || '';
+  document.getElementById('f-width').value       = t.width || '';
+  document.getElementById('f-height').value      = t.height || '';
+  document.getElementById('f-depth').value       = t.depth || '';
+  document.getElementById('f-notes').value       = t.notes || '';
+  document.getElementById('f-description').value = t.description || '';
+  document.querySelectorAll('.template-chip').forEach((c,i) => c.classList.toggle('active', i === idx));
+  toast('Template applied ✓');
+}
+
+async function saveCurrentAsTemplate() {
+  const cat = document.getElementById('f-category').value;
+  if (!cat) { toast('Select a category first'); return; }
+  const color = prompt('Name this color template (e.g. "Mint Green"):');
+  if (!color) return;
+  const t = {
+    category: cat, color,
+    price:       document.getElementById('f-price').value,
+    materials:   document.getElementById('f-materials').value.trim(),
+    width:       document.getElementById('f-width').value,
+    height:      document.getElementById('f-height').value,
+    depth:       document.getElementById('f-depth').value,
+    notes:       document.getElementById('f-notes').value.trim(),
+    description: document.getElementById('f-description').value.trim(),
+  };
+  // Optimistic cache update
+  const templates = getTemplates();
+  if (!templates[cat]) templates[cat] = [];
+  templates[cat].push(t);
+  setTemplatesCache(templates);
+  renderTemplateChips(cat);
+  toast(`Template "${color}" saved ✓`);
+  // Sync to Sheet
+  apiFetch({ action: 'saveTemplate', secret: session.hash, data: JSON.stringify(t) })
+    .catch(() => toast('Saved locally — sync failed'));
+}
+
+// ═══════════════════════════════════════════════════
+// DRAWER — ADD
+// ═══════════════════════════════════════════════════
+function openDrawer() {
+  editingId = null;
+  document.getElementById('drawer-title').textContent = 'Add New Bag';
+  document.getElementById('submit-btn').textContent = 'Add to Inventory';
+  // Show template section, hide edit-only category field
+  document.getElementById('template-section').style.display = 'block';
+  document.getElementById('category-field-edit').style.display = 'none';
+  // Clear fields
+  ['f-name','f-price','f-materials','f-width','f-height','f-depth','f-notes'].forEach(id => {
+    document.getElementById(id).value = '';
+  });
+  document.getElementById('f-category').value = '';
+  document.getElementById('color-template-row').style.display = 'none';
+  document.getElementById('template-chips').innerHTML = '';
+  document.getElementById('save-as-template-row').style.display = 'none';
+  document.getElementById('f-description').value = '';
+  document.getElementById('drawer').classList.add('open');
+  document.getElementById('drawer-backdrop').classList.add('open');
+  setTimeout(() => document.getElementById('f-category').focus(), 300);
+}
+
+// ═══════════════════════════════════════════════════
+// DRAWER — EDIT
+// ═══════════════════════════════════════════════════
+function openEditDrawer(id) {
+  const bag = bags.find(b => b.id === id);
+  if (!bag) return;
+  editingId = id;
+  document.getElementById('drawer-title').textContent = 'Edit Bag';
+  document.getElementById('submit-btn').textContent = 'Save Changes';
+  document.getElementById('template-section').style.display = 'none';
+  document.getElementById('category-field-edit').style.display = 'block';
+  document.getElementById('save-as-template-row').style.display = 'block';
+  // Pre-fill all fields
+  document.getElementById('f-name').value            = bag.name || '';
+  document.getElementById('f-category-edit').value   = bag.category || '';
+  document.getElementById('f-price').value            = bag.price || '';
+  document.getElementById('f-materials').value        = bag.materials || '';
+  document.getElementById('f-width').value            = bag.width || '';
+  document.getElementById('f-height').value           = bag.height || '';
+  document.getElementById('f-depth').value            = bag.depth || '';
+  document.getElementById('f-notes').value            = bag.notes || '';
+  document.getElementById('f-description').value      = bag.description || '';
+  document.getElementById('drawer').classList.add('open');
+  document.getElementById('drawer-backdrop').classList.add('open');
+}
+
+function closeDrawer() {
+  document.getElementById('drawer').classList.remove('open');
+  document.getElementById('drawer-backdrop').classList.remove('open');
+  editingId = null;
+}
+
+// ═══════════════════════════════════════════════════
+// SUBMIT (add or edit)
+// ═══════════════════════════════════════════════════
+async function submitBag() {
+  const isEdit   = editingId !== null;
+  const name     = document.getElementById('f-name').value.trim();
+  const category = isEdit
+    ? document.getElementById('f-category-edit').value
+    : document.getElementById('f-category').value;
+  const price    = document.getElementById('f-price').value;
+  const materials= document.getElementById('f-materials').value.trim();
+  const width    = document.getElementById('f-width').value;
+  const height   = document.getElementById('f-height').value;
+  const depth    = document.getElementById('f-depth').value;
+  const notes       = document.getElementById('f-notes').value.trim();
+  const description = document.getElementById('f-description').value.trim();
+
+  if (!name)  { toast('Please enter a name'); return; }
+  if (!price) { toast('Please enter a price'); return; }
+
+  const btn = document.getElementById('submit-btn');
+  btn.disabled = true; btn.innerHTML = '<span class="spinner"></span>Saving…';
+
+  if (isEdit) {
+    // UPDATE existing bag
+    const bag = bags.find(b => b.id === editingId);
+    if (!bag) { closeDrawer(); return; }
+    Object.assign(bag, { name, category, price: parseFloat(price).toFixed(2), materials, width, height, depth, notes, description });
+    LS.set('ah_cache', bags);
+    renderAll();
+    closeDrawer();
+    try {
+      await apiFetch({ action: 'editbag', secret: session.hash, data: JSON.stringify(bag) });
+      toast('Bag updated ✓');
+    } catch(e) {
+      toast('Saved locally — sync failed');
+    }
+  } else {
+    // ADD new bag
+    const bag = {
+      id: 'bag_' + Date.now(),
+      name, category, price: parseFloat(price).toFixed(2),
+      materials, width, height, depth, notes, description,
+      sold: false, soldAt: null,
+      createdAt: new Date().toISOString()
+    };
+    bags.unshift(bag);
+    LS.set('ah_cache', bags);
+    renderAll();
+    closeDrawer();
+    try {
+      await apiFetch({ action: 'write', secret: session.hash, data: JSON.stringify(bag) });
+      toast('Bag added ✓');
+    } catch(e) {
+      toast('Saved locally — sync failed');
+    }
+  }
+  btn.disabled = false;
+  btn.textContent = isEdit ? 'Save Changes' : 'Add to Inventory';
+}
+
+// ═══════════════════════════════════════════════════
+// TEMPLATE MANAGER
+// ═══════════════════════════════════════════════════
+async function saveEditedBagAsTemplate() {
+  const bag = bags.find(b => b.id === editingId);
+  if (!bag) return;
+  const cat = document.getElementById('f-category-edit').value || bag.category;
+  if (!cat) { toast('No category set'); return; }
+  const color = prompt(`Name this template for "${cat}" (e.g. "Mint Green"):`);
+  if (!color) return;
+  const t = {
+    category: cat, color,
+    price:       document.getElementById('f-price').value,
+    materials:   document.getElementById('f-materials').value.trim(),
+    width:       document.getElementById('f-width').value,
+    height:      document.getElementById('f-height').value,
+    depth:       document.getElementById('f-depth').value,
+    notes:       document.getElementById('f-notes').value.trim(),
+    description: document.getElementById('f-description').value.trim(),
+  };
+  const templates = getTemplates();
+  if (!templates[cat]) templates[cat] = [];
+  templates[cat].push(t);
+  setTemplatesCache(templates);
+  toast(`Template "${color}" saved ✓`);
+  apiFetch({ action: 'saveTemplate', secret: session.hash, data: JSON.stringify(t) })
+    .catch(() => toast('Saved locally — sync failed'));
+}
+
+function renderTemplateManager() {
+  const templates = getTemplates();
+  const el = document.getElementById('template-manager-content');
+  if (!el) return;
+  const cats = Object.keys(templates).sort();
+  if (!cats.length) {
+    el.innerHTML = `<div class="tmpl-empty">No templates yet. Add a bag, fill in the details, then tap "Save current as template".</div>`;
+    return;
+  }
+  el.innerHTML = cats.map(cat => {
+    const items = templates[cat];
+    const rows = items.map((t, i) => `
+      <div class="tmpl-item">
+        <div class="tmpl-item-info">
+          <div class="tmpl-item-name">${t.color || 'Unnamed'}</div>
+          <div class="tmpl-item-meta">
+            ${[t.price ? '€' + t.price : '', t.materials, (t.width && t.height) ? t.width + '×' + t.height + (t.depth ? '×' + t.depth : '') + ' cm' : ''].filter(Boolean).join(' · ')}
+          </div>
+          ${t.description ? `<div class="tmpl-item-meta" style="margin-top:2px;font-style:italic">${t.description.slice(0,60)}${t.description.length > 60 ? '…' : ''}</div>` : ''}
+        </div>
+        <div class="tmpl-item-actions">
+          <button class="tmpl-action" onclick="editTemplate('${cat}',${i})">Edit</button>
+          <button class="tmpl-action danger" onclick="deleteTemplate('${cat}','${t.color}')">Delete</button>
+        </div>
+      </div>`).join('');
+    return `<div class="tmpl-cat-section">
+      <div class="tmpl-cat-header">
+        <span>${cat}</span>
+        <span style="font-size:10px">${items.length} template${items.length !== 1 ? 's' : ''}</span>
+      </div>
+      ${rows || '<div class="tmpl-empty">No templates</div>'}
+    </div>`;
+  }).join('');
+}
+
+function editTemplate(cat, idx) {
+  const templates = getTemplates();
+  const t = (templates[cat] || [])[idx];
+  if (!t) return;
+  document.getElementById('te-cat').textContent    = cat;
+  document.getElementById('te-color').value        = t.color || '';
+  document.getElementById('te-price').value        = t.price || '';
+  document.getElementById('te-materials').value    = t.materials || '';
+  document.getElementById('te-width').value        = t.width || '';
+  document.getElementById('te-height').value       = t.height || '';
+  document.getElementById('te-depth').value        = t.depth || '';
+  document.getElementById('te-notes').value        = t.notes || '';
+  document.getElementById('te-description').value  = t.description || '';
+  document.getElementById('te-drawer').dataset.cat          = cat;
+  document.getElementById('te-drawer').dataset.idx          = idx;
+  document.getElementById('te-drawer').dataset.originalColor = t.color || '';
+  document.getElementById('te-drawer').classList.add('open');
+  document.getElementById('drawer-backdrop').classList.add('open');
+}
+
+async function saveTemplateEdit() {
+  const el            = document.getElementById('te-drawer');
+  const cat           = el.dataset.cat;
+  const idx           = parseInt(el.dataset.idx);
+  const originalColor = el.dataset.originalColor;
+  const templates     = getTemplates();
+  if (!templates[cat] || !templates[cat][idx]) return;
+  const color = document.getElementById('te-color').value.trim();
+  if (!color) { toast('Please enter a color name'); return; }
+  const updated = {
+    category: cat, color, originalColor,
+    price:       document.getElementById('te-price').value,
+    materials:   document.getElementById('te-materials').value.trim(),
+    width:       document.getElementById('te-width').value,
+    height:      document.getElementById('te-height').value,
+    depth:       document.getElementById('te-depth').value,
+    notes:       document.getElementById('te-notes').value.trim(),
+    description: document.getElementById('te-description').value.trim(),
+  };
+  // Optimistic local update
+  templates[cat][idx] = updated;
+  setTemplatesCache(templates);
+  closeTemplateDrawer();
+  renderTemplateManager();
+  toast('Template updated ✓');
+  // Sync to Sheet
+  apiFetch({ action: 'updateTemplate', secret: session.hash, data: JSON.stringify(updated) })
+    .catch(() => toast('Updated locally — sync failed'));
+}
+
+function closeTemplateDrawer() {
+  document.getElementById('te-drawer').classList.remove('open');
+  document.getElementById('drawer-backdrop').classList.remove('open');
+}
+
+async function deleteTemplate(cat, color) {
+  if (!confirm('Delete this template?')) return;
+  const templates = getTemplates();
+  if (!templates[cat]) return;
+  templates[cat] = templates[cat].filter(t => t.color !== color);
+  if (!templates[cat].length) delete templates[cat];
+  setTemplatesCache(templates);
+  renderTemplateManager();
+  toast('Template deleted');
+  apiFetch({ action: 'deleteTemplate', secret: session.hash, category: cat, color })
+    .catch(() => toast('Deleted locally — sync failed'));
+}
+
+// ═══════════════════════════════════════════════════
+// SETTINGS
+// ═══════════════════════════════════════════════════
+function saveUrl() {
+  const url = document.getElementById('settings-url').value.trim();
+  if (!url) { toast('Please enter a URL'); return; }
+  session.url = url;
+  LS.set('ah_session', session);
+  toast('URL saved');
+}
+
+async function changePassword() {
+  const pw = document.getElementById('new-password').value;
+  if (!pw || pw.length < 4) { toast('Password must be at least 4 characters'); return; }
+  session.hash = await hashPassword(pw);
+  LS.set('ah_session', session);
+  document.getElementById('new-password').value = '';
+  toast('Password updated');
+}
+
+function exportCSV() {
+  const header = 'ID,Name,Category,Price,Materials,Width,Height,Depth,Notes,Description,Sold,Created\n';
+  const rows   = bags.map(b =>
+    [b.id, b.name, b.category, b.price, b.materials, b.width, b.height, b.depth, b.notes, b.description, b.sold ? 'Yes' : 'No', b.createdAt]
+    .map(v => `"${(v||'').toString().replace(/"/g,'""')}"`)
+    .join(',')
+  ).join('\n');
+  const blob = new Blob([header + rows], { type: 'text/csv' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'annehermine-inventory.csv';
+  a.click();
+}
+
+async function clearAll() {
+  if (!confirm('Clear ALL bags from the sheet? This cannot be undone.')) return;
+  try {
+    await apiFetch({ action: 'clear', secret: session.hash });
+    bags = []; LS.del('ah_cache'); renderAll();
+    toast('All data cleared');
+  } catch(e) { toast('Could not clear — try again'); }
+}
+
+// ═══════════════════════════════════════════════════
+// TOAST
+// ═══════════════════════════════════════════════════
+let _toastTimer;
+function toast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg; el.classList.add('show');
+  clearTimeout(_toastTimer);
+  _toastTimer = setTimeout(() => el.classList.remove('show'), 2500);
+}
+
+// ═══════════════════════════════════════════════════
+// KEYBOARD
+// ═══════════════════════════════════════════════════
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') { closeDrawer(); closeTemplateDrawer(); }
+  if (e.key === 'Enter' && document.getElementById('auth-screen').style.display !== 'none') doLogin();
+});
+
+// ═══════════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════════
+(function init() {
+  const saved = LS.get('ah_session');
+  if (saved && saved.url && saved.hash) {
+    session = saved;
+    document.getElementById('auth-url').value = saved.url;
+    showApp();
+  }
+  // Register service worker for offline support
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('sw.js').catch(() => {});
+  }
+})();
+</script>
+</body>
+</html>
