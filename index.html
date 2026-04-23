@@ -1584,19 +1584,14 @@ Reply in this exact JSON format only, no other text:
 {"category": "...", "color": "..."}`;
 
   try {
-    const response = await fetch(`${ollamaUrl}/api/generate?ngrok-skip-browser-warning=true`, {
+    const payload = { model: 'llava', prompt, images: [base64Image], stream: false };
+    const data = await apiFetch({
+      action: 'ollamaProxy',
+      secret: session.hash,
+      ollamaUrl,
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        model: 'llava',
-        prompt,
-        images: [base64Image],
-        stream: false
-      })
+      data: JSON.stringify(payload)
     });
-
-    if (!response.ok) throw new Error('HTTP ' + response.status);
-    const data = await response.json();
 
     // Parse JSON from response
     const text = data.response || '';
@@ -1676,27 +1671,20 @@ async function testOllama() {
   const ollamaUrl = getOllamaUrl();
   const statusEl = document.getElementById('ollama-test-status');
   if (!ollamaUrl) { if(statusEl) statusEl.textContent = 'No URL saved'; return; }
-
-  if (statusEl) statusEl.innerHTML = 'Testing...<br>URL: ' + ollamaUrl +
-    '<br>Mode: ' + (window.location.protocol) +
-    '<br>UA: ' + navigator.userAgent.slice(0,80);
-
+  if (statusEl) statusEl.textContent = 'Testing via proxy…';
   try {
-    const r = await fetch(`${ollamaUrl}/api/tags?ngrok-skip-browser-warning=true`, {
-      mode: 'cors',
-      cache: 'no-cache'
+    const data = await apiFetch({
+      action: 'ollamaProxy',
+      secret: session.hash,
+      ollamaUrl,
+      method: 'GET'
     });
-    if (!r.ok) {
-      if (statusEl) statusEl.textContent = 'HTTP error: ' + r.status + ' ' + r.statusText;
-      return;
-    }
-    const j = await r.json();
-    const models = (j.models || []).map(m => m.name).join(', ');
+    const models = (data.models || []).join(', ');
     if (statusEl) statusEl.textContent = '✓ Connected — ' + models;
     toast('Connected ✓');
   } catch(e) {
-    const msg = e.toString() + ' | name: ' + e.name + ' | stack: ' + (e.stack||'').slice(0,100);
-    if (statusEl) statusEl.textContent = 'Error: ' + msg;
+    if (statusEl) statusEl.textContent = 'Failed: ' + e.message;
+    toast('Failed: ' + e.message);
   }
 }
 
