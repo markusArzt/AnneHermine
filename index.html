@@ -1584,12 +1584,9 @@ Reply in this exact JSON format only, no other text:
 {"category": "...", "color": "..."}`;
 
   try {
-    const response = await fetch(`${ollamaUrl}/api/generate`, {
+    const response = await fetch(`${ollamaUrl}/api/generate?ngrok-skip-browser-warning=true`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'ngrok-skip-browser-warning': 'true'
-      },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         model: 'llava',
         prompt,
@@ -1668,11 +1665,11 @@ function saveUrl() {
 }
 
 function saveOllamaUrl() {
-  const ip = document.getElementById('settings-ollama').value.trim().replace(/^https?:\/\//, '').replace(/:.*$/, '');
-  if (!ip) { toast('Please enter an IP address'); return; }
-  LS.set('ah_ollama_ip', ip);
+  const val = document.getElementById('settings-ollama').value.trim().replace(/\/$/, '');
+  if (!val) { toast('Please enter a URL or IP address'); return; }
+  LS.set('ah_ollama_ip', val);
   document.getElementById('camera-btn').style.display = 'flex';
-  toast('Ollama IP saved ✓');
+  toast('Ollama URL saved ✓');
 }
 
 async function testOllama() {
@@ -1681,9 +1678,7 @@ async function testOllama() {
   const statusEl = document.getElementById('ollama-test-status');
   if (statusEl) statusEl.textContent = 'Testing: ' + ollamaUrl;
   try {
-    const r = await fetch(`${ollamaUrl}/api/tags`, {
-      headers: { 'ngrok-skip-browser-warning': 'true' }
-    });
+    const r = await fetch(`${ollamaUrl}/api/tags?ngrok-skip-browser-warning=true`);
     if (!r.ok) {
       const msg = 'HTTP ' + r.status;
       if (statusEl) statusEl.textContent = 'Error: ' + msg;
