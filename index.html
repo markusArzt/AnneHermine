@@ -1674,15 +1674,20 @@ function saveOllamaUrl() {
 
 async function testOllama() {
   const ollamaUrl = getOllamaUrl();
-  if (!ollamaUrl) { toast('Enter a URL first'); return; }
   const statusEl = document.getElementById('ollama-test-status');
-  if (statusEl) statusEl.textContent = 'Testing: ' + ollamaUrl;
+  if (!ollamaUrl) { if(statusEl) statusEl.textContent = 'No URL saved'; return; }
+
+  if (statusEl) statusEl.innerHTML = 'Testing...<br>URL: ' + ollamaUrl +
+    '<br>Mode: ' + (window.location.protocol) +
+    '<br>UA: ' + navigator.userAgent.slice(0,80);
+
   try {
-    const r = await fetch(`${ollamaUrl}/api/tags?ngrok-skip-browser-warning=true`);
+    const r = await fetch(`${ollamaUrl}/api/tags?ngrok-skip-browser-warning=true`, {
+      mode: 'cors',
+      cache: 'no-cache'
+    });
     if (!r.ok) {
-      const msg = 'HTTP ' + r.status;
-      if (statusEl) statusEl.textContent = 'Error: ' + msg;
-      toast('Error: ' + msg);
+      if (statusEl) statusEl.textContent = 'HTTP error: ' + r.status + ' ' + r.statusText;
       return;
     }
     const j = await r.json();
@@ -1690,9 +1695,8 @@ async function testOllama() {
     if (statusEl) statusEl.textContent = '✓ Connected — ' + models;
     toast('Connected ✓');
   } catch(e) {
-    const msg = e.message || 'Unknown error';
-    if (statusEl) statusEl.textContent = 'Failed: ' + msg;
-    toast('Failed: ' + msg);
+    const msg = e.toString() + ' | name: ' + e.name + ' | stack: ' + (e.stack||'').slice(0,100);
+    if (statusEl) statusEl.textContent = 'Error: ' + msg;
   }
 }
 
