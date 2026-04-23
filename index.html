@@ -1585,7 +1585,10 @@ Reply in this exact JSON format only, no other text:
   try {
     const response = await fetch(`${ollamaUrl}/api/generate`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        'ngrok-skip-browser-warning': 'true'
+      },
       body: JSON.stringify({
         model: 'llava',
         prompt,
@@ -1675,7 +1678,9 @@ async function testOllama() {
   const ollamaUrl = getOllamaUrl();
   if (!ollamaUrl) { toast('Enter an IP address first'); return; }
   try {
-    const r = await fetch(`${ollamaUrl}/api/tags`);
+    const r = await fetch(`${ollamaUrl}/api/tags`, {
+      headers: { 'ngrok-skip-browser-warning': 'true' }
+    });
     const j = await r.json();
     const models = (j.models || []).map(m => m.name).join(', ');
     toast(`Connected ✓ Models: ${models}`);
